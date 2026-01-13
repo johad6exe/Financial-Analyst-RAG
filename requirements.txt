@@ -8,4 +8,6 @@ streamlit
 python-dotenv
 pandas
 nest_asyncio
-llama-index-llms-ollama
+llama-index-llms-groq
+psycopg2-binary
+sqlalchemy

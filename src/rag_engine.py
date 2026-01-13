@@ -1,66 +1,54 @@
 import os
+from dotenv import load_dotenv
 from llama_index.core import VectorStoreIndex, get_response_synthesizer
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.llms.ollama import Ollama
+from llama_index.llms.groq import Groq  # <--- NEW: Cloud LLM
 import chromadb
+from src.prompts import STRICT_QA_TEMPLATE
 
-# --- CONFIGURATION ---
-DB_PATH = "./database"
+# Load environment variables
+load_dotenv()   
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+# Local fallback for DB path, but for Cloud we need to handle paths carefully
+DB_PATH = "./database" 
 COLLECTION_NAME = "nvidia_financials"
 
 def get_query_engine():
-    # 1. Connect to the existing Database
-    # We use the same path where we stored the data
+    # 1. Database Setup
     db = chromadb.PersistentClient(path=DB_PATH)
-    chroma_collection = db.get_collection(COLLECTION_NAME)
+    chroma_collection = db.get_or_create_collection(COLLECTION_NAME)
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     
-    # 2. Load the Embedding Model
+    # 2. Embedding Model (This still runs on CPU, might be slow on free tier)
+    # Optimization: On Render free tier, HuggingFace Local Embeddings might OOM (Out of Memory).
+    # If it crashes, we might need a smaller model or an API for embeddings too.
     embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
     
-    # 3. Load the Index from the Vector Store
     index = VectorStoreIndex.from_vector_store(
-        vector_store,
-        embed_model=embed_model
+        vector_store, embed_model=embed_model
     )
 
-    # 4. Setup the LLM (Ollama)
-    # request_timeout=360.0 ensures it doesn't crash if your laptop is slow
-    llm = Ollama(
-        model="llama3.2:3b",
-        request_timeout=360.0,
-        context_window=3072) 
+    # ... inside get_query_engine() ...
 
-    # 5. Configure Retrieval
-    # "similarity_top_k=5" means: "Find the 5 most relevant paragraphs"
-    retriever = VectorIndexRetriever(
-        index=index,
-        similarity_top_k=1,
-    )
+    # 3. LLM Setup (Switched to Groq)
+    if not GROQ_API_KEY:
+        raise ValueError("❌ MISSING GROQ_API_KEY!")
 
-    # 6. Build the Engine
-    # This combines: Finding Data (Retriever) + Answering (LLM)
+    llm = Groq(model="llama-3.3-70b-versatile", api_key=GROQ_API_KEY)
+
+    retriever = VectorIndexRetriever(index=index, similarity_top_k=3)
+
     query_engine = RetrieverQueryEngine(
         retriever=retriever,
-        response_synthesizer=get_response_synthesizer(llm=llm)
+        response_synthesizer=get_response_synthesizer(
+            llm=llm,
+            text_qa_template=STRICT_QA_TEMPLATE
+        )
     )
 
     return query_engine
-
-# --- TEST SECTION ---
-if __name__ == "__main__":
-    print("⏳ Loading RAG Engine...")
-    engine = get_query_engine()
-    
-    # --- NEW QUESTION FOR 2025 REPORT ---
-    # This targets the specific "Data Center" segment which drives Nvidia's 2025 growth.
-    question = "What was the specific dollar amount for Data Center revenue in Fiscal Year 2025?"
-    
-    print(f"❓ Question: {question}")
-    print("🤖 Thinking...")
-    
-    response = engine.query(question)
-    print(f"🤖 Answer: {response}")
