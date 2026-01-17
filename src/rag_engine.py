@@ -3,7 +3,7 @@ from llama_index.core import VectorStoreIndex, get_response_synthesizer
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.embeddings.huggingface import HuggingFaceInferenceAPIEmbedding # <--- NEW: API based
+from llama_index.embeddings.huggingface import HuggingFaceInferenceAPIEmbedding
 from llama_index.llms.groq import Groq
 import chromadb
 from src.prompts import STRICT_QA_TEMPLATE

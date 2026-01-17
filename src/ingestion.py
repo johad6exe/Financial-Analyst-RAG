@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from llama_parse import LlamaParse
 from llama_index.core import VectorStoreIndex, StorageContext, SimpleDirectoryReader
 from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core.node_parser import MarkdownNodeParser  # <--- CHANGED THIS IMPORT
+from llama_index.core.node_parser import MarkdownNodeParser
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 import chromadb
 
