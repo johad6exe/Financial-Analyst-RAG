@@ -6,7 +6,6 @@ llama-index-embeddings-huggingface
 chromadb
 streamlit
 python-dotenv
-pandas
 nest_asyncio
 llama-index-llms-groq
 psycopg2-binary
