@@ -1,13 +1,17 @@
+import sys
 import os
 from llama_index.core import VectorStoreIndex, get_response_synthesizer
 from llama_index.vector_stores.chroma import ChromaVectorStore
 from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
-from llama_index.embeddings.huggingface import HuggingFaceInferenceAPIEmbedding
+from llama_index.embeddings.huggingface_api import HuggingFaceInferenceAPIEmbedding
 from llama_index.llms.groq import Groq
 import chromadb
-from src.prompts import STRICT_QA_TEMPLATE
 from dotenv import load_dotenv
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.prompts import STRICT_QA_TEMPLATE
 
 load_dotenv()
 
