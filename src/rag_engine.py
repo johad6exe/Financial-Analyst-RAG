@@ -45,7 +45,12 @@ def get_query_engine():
     if not GROQ_API_KEY:
         raise ValueError("❌ MISSING GROQ_API_KEY!")
     
-    llm = Groq(model="llama-3.3-70b-versatile", api_key=GROQ_API_KEY)
+    llm = Groq(
+        model="llama-3.3-70b-versatile", 
+        api_key=GROQ_API_KEY,
+        temperature=0.0,
+        max_tokens=4096
+    )
 
     retriever = VectorIndexRetriever(index=index, similarity_top_k=3)
 
