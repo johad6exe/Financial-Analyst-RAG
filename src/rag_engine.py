@@ -6,6 +6,11 @@ from llama_index.core.retrievers import VectorIndexRetriever
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.embeddings.huggingface_api import HuggingFaceInferenceAPIEmbedding
 from llama_index.llms.groq import Groq
+from llama_index.core.postprocessor import SentenceTransformerRerank
+
+from llama_index.retrievers.bm25 import BM25Retriever
+from llama_index.core.retrievers import QueryFusionRetriever
+
 import chromadb
 from dotenv import load_dotenv
 
@@ -17,7 +22,6 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 HF_TOKEN = os.getenv("HF_TOKEN")
-
 DB_PATH = "./database" 
 COLLECTION_NAME = "nvidia_financials"
 
@@ -38,8 +42,34 @@ def get_query_engine():
     )
     
     index = VectorStoreIndex.from_vector_store(
-        vector_store, embed_model=embed_model
+        vector_store, 
+        embed_model=embed_model
     )
+    #vector retriever
+    vector_retriever = VectorIndexRetriever(
+        index=index, 
+        similarity_top_k=10
+        )
+
+    # BM25 retriever (keyword-based)
+    bm25_retriever = BM25Retriever.from_default(
+        index=index,
+        similarity_top_k=10
+    )
+
+    # Fusion retriever (combines both)
+    hybrid_retriever = QueryFusionRetriever(
+        retrievers=[vector_retriever, bm25_retriever],
+        similarity_top_k=10,
+        num_queries=1,
+        mode="reciprocal_rerank"
+    )
+
+
+    reranker = SentenceTransformerRerank(
+        model="BAAI/bge-reranker-base",
+        top_n=3
+        )
 
     # 3. LLM Setup (Groq)
     if not GROQ_API_KEY:
@@ -48,14 +78,12 @@ def get_query_engine():
     llm = Groq(
         model="llama-3.3-70b-versatile", 
         api_key=GROQ_API_KEY,
-        temperature=0.0,
-        max_tokens=4096
+        temperature=0.0
     )
 
-    retriever = VectorIndexRetriever(index=index, similarity_top_k=3)
-
     query_engine = RetrieverQueryEngine(
-        retriever=retriever,
+        retriever=hybrid_retriever,
+        node_postprocessor=[reranker],
         response_synthesizer=get_response_synthesizer(
             llm=llm,
             text_qa_template=STRICT_QA_TEMPLATE
