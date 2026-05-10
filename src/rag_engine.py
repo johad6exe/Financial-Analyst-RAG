@@ -12,7 +12,7 @@ from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.core.retrievers import QueryFusionRetriever
 
 import chromadb
-from dotenv import load_dotenv
+from dotenv import load_dotenv 
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

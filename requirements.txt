@@ -1,28 +1,21 @@
-# Core LlamaIndex
-llama-index==0.10.30
+# 1. Core frameworks
+llama-index-core 
+llama-index-llms-openai 
+llama-index-embeddings-openai
+llama-index-embeddings-huggingface-api
+llama-index-retrievers-bm25 
+llama-index-postprocessor-rerank-sentence-transformers
 
-# Parsing
-llama-parse==0.4.2
+# 2. Specific components
+llama-parse 
+llama-index-llms-groq 
+llama-index-vector-stores-chroma 
+chromadb
 
-# Embeddings
-# llama-index-embeddings-huggingface==0.1.4
-llama-index-embeddings-huggingface-api==0.1.0
-
-# Vector DB
-chromadb==0.4.24
-llama-index-vector-stores-chroma==0.1.6
-
-# LLM
-llama-index-llms-groq==0.1.3
-sentence-transformers==2.6.1
-llama-index-retrievers-bm25==0.1.3
-rank-bm25==0.2.2
-
-# App
-streamlit==1.32.2
-python-dotenv==1.0.1
-nest-asyncio==1.6.0
-
-# DB
-psycopg2-binary==2.9.9
-sqlalchemy==2.0.25
+# 3. UI and utility tools
+streamlit 
+python-dotenv 
+sentence-transformers 
+rank-bm25 
+psycopg2-binary 
+sqlalchemy
